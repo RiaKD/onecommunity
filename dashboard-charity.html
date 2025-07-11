@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Charity Dashboard | OneCommunity</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .dashboard-container {
+        display: flex;
+        max-width: 1200px;
+        margin: 2em auto;
+        background: #f7f3f9;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .dashboard-sidebar {
+        width: 250px;
+        background: #6b0504;
+        color: #eddfef;
+        padding: 2em 0;
+      }
+      .dashboard-sidebar h2 {
+        text-align: center;
+        margin-bottom: 2em;
+        padding: 0 1em;
+      }
+      .sidebar-item {
+        display: block;
+        padding: 1em 2em;
+        color: #eddfef;
+        text-decoration: none;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+      .sidebar-item:hover,
+      .sidebar-item.active {
+        background: rgba(255,255,255,0.1);
+        border-left-color: #eddfef;
+      }
+      .dashboard-main {
+        flex: 1;
+        padding: 2em;
+      }
+      .dashboard-section {
+        display: none;
+      }
+      .dashboard-section.active {
+        display: block;
+      }
+      .dashboard-header {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #6b0504;
+        margin-bottom: 1.5em;
+      }
+      .dashboard-card {
+        background: white;
+        padding: 1.5em;
+        border-radius: 8px;
+        margin-bottom: 1.5em;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .offers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5em;
+        margin-top: 1.5em;
+      }
+      .offer-tile {
+        background: white;
+        padding: 1.5em;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 4px solid #6b0504;
+      }
+      .offer-tile h3 {
+        color: #6b0504;
+        margin-bottom: 0.5em;
+      }
+      .business-name {
+        color: #666;
+        font-style: italic;
+        margin-bottom: 1em;
+      }
+      .item-details {
+        margin-bottom: 1em;
+      }
+      .quantity {
+        font-weight: bold;
+        color: #6b0504;
+        margin-bottom: 0.5em;
+      }
+      .date {
+        color: #999;
+        font-size: 0.9em;
+        margin-bottom: 1em;
+      }
+      .accept-btn {
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.7em 1.5em;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+      }
+      .accept-btn:hover {
+        background: #45a049;
+      }
+      .loading {
+        text-align: center;
+        padding: 2em;
+        color: #666;
+        font-style: italic;
+      }
+      .no-offers {
+        text-align: center;
+        padding: 2em;
+        color: #666;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div style="font-size:1.5em;font-weight:bold;letter-spacing:1px;">OneCommunity</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="why.html">About Us</a></li>
+        <li><a href="businesses.html">For Businesses</a></li>
+        <li><a href="charities.html">For Charities</a></li>
+        <li><a href="individuals.html">Volunteering</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+      <a href="login.html" class="cta-login" style="text-decoration:none;">Log In / Register</a>
+    </nav>
+    <main>
+
+      <div class="dashboard-container">
+        <div class="dashboard-sidebar">
+            <div class="sidebar-item active" onclick="showSection('overview')">Overview</div>
+            <div class="sidebar-item" onclick="showSection('request-donation')">Request a Donation</div>
+            <div class="sidebar-item" onclick="showSection('request-volunteer')">Request Volunteers</div>
+            <div class="sidebar-item" onclick="showSection('requests')">Requests Management</div>
+            <div class="sidebar-item" onclick="showSection('matches')">Matches</div>
+            <div class="sidebar-item" onclick="showSection('account')">Account Settings</div>
+        </div>
+        <div class="dashboard-main">
+            <div id="overview" class="dashboard-section active">
+                <div class="dashboard-header">Welcome, <span id="charity-name">Charity</span>!</div>
+                <div class="dashboard-card">
+                    <strong>Quick Stats</strong><br>
+                    <p>Active Requests: <span id="active-requests-count">0</span></p>
+                    <p>Offers Received: <span id="offers-received-count">0</span></p>
+                    <p>Successful Matches: <span id="successful-matches-count">0</span></p>
+                </div>
+                <div class="dashboard-card">
+                    <strong>Recent Activity</strong><br>
+                    <p>No recent activity to display.</p>
+                </div>
+            </div>
+            
+            <div id="request-donation" class="dashboard-section">
+                <div class="dashboard-header">Request a Donation</div>
+                <div class="dashboard-card">
+                    <strong>Submit a New Donation Request</strong>
+                    <form id="charity-request-form" style="margin-top: 1em;">
+                        <div style="margin-bottom: 1em;">
+                            <label for="request-item">Item Needed:</label><br>
+                            <input type="text" id="request-item" name="item" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                        </div>
+                        <div style="margin-bottom: 1em;">
+                            <label for="request-category">Category:</label><br>
+                            <select id="request-category" name="category" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                                <option value="Food">Food</option>
+                                <option value="Toiletries">Toiletries</option>
+                                <option value="Clothes">Clothes</option>
+                                <option value="Books">Books</option>
+                                <option value="Toys">Toys</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1em;">
+                            <label for="request-quantity">Quantity:</label><br>
+                            <input type="number" id="request-quantity" name="quantity" min="1" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                        </div>
+                        <div style="margin-bottom: 1em;">
+                            <label for="request-details">Details:</label><br>
+                            <textarea id="request-details" name="details" style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px; height: 80px; resize: vertical;"></textarea>
+                        </div>
+                        <button type="submit" style="background: #6b0504; color: #eddfef; border: none; border-radius: 5px; padding: 1em 2em; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 1em; width: 100%;">Submit Request</button>
+                    </form>
+                    <div id="charity-request-message" style="margin-top: 1em;"></div>
+                </div>
+            </div>
+            
+            <div id="request-volunteer" class="dashboard-section">
+                <div class="dashboard-header">Request Volunteers</div>
+                <div class="dashboard-card">
+                    <strong>Submit a New Volunteer Request</strong>
+                    <form id="charity-volunteer-form" style="margin-top: 1em;">
+                        <div style="margin-bottom: 1em;">
+                            <label for="volunteer-role">Volunteer Role:</label><br>
+                            <input type="text" id="volunteer-role" name="role" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;" placeholder="e.g., Event Coordinator, Food Server, Tutor">
+                        </div>
+                        <div style="margin-bottom: 1em;">
+                            <label for="volunteer-category">Category:</label><br>
+                            <select id="volunteer-category" name="category" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                                <option value="Event Support">Event Support</option>
+                                <option value="Administrative">Administrative</option>
+                                <option value="Teaching/Tutoring">Teaching/Tutoring</option>
+                                <option value="Food Service">Food Service</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Fundraising">Fundraising</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1em;">
+                            <label for="volunteer-hours">Hours Needed:</label><br>
+                            <input type="number" id="volunteer-hours" name="hours" min="1" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                        </div>
+                        <div style="margin-bottom: 1em;">
+                            <label for="volunteer-details">Details:</label><br>
+                            <textarea id="volunteer-details" name="details" style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px; height: 80px; resize: vertical;" placeholder="Describe the volunteer opportunity, requirements, location, etc."></textarea>
+                        </div>
+                        <button type="submit" style="background: #6b0504; color: #eddfef; border: none; border-radius: 5px; padding: 1em 2em; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 1em; width: 100%;">Submit Volunteer Request</button>
+                    </form>
+                    <div id="charity-volunteer-message" style="margin-top: 1em;"></div>
+                </div>
+            </div>
+            
+            <div id="requests" class="dashboard-section">
+                <div class="dashboard-header">Requests Management</div>
+                <div class="dashboard-card">
+                    <strong>Your Active Requests</strong>
+                    <div id="charity-requests-posted">
+                        <!-- Requests posted by this charity will be loaded here -->
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <strong>Offers Received</strong>
+                    <div id="charity-offers-received">
+                        <!-- Offers received for this charity's requests will be loaded here -->
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <strong>Offers Accepted</strong>
+                    <div id="charity-offers-accepted">
+                        <!-- Offers that have been accepted will be loaded here -->
+                    </div>
+                </div>
+                <div class="dashboard-card">
+                    <strong>Volunteer Applications Received</strong>
+                    <div id="charity-volunteer-applications">
+                        <!-- Volunteer applications will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="matches" class="dashboard-section">
+                <div class="dashboard-header">Your Matches</div>
+                <div class="dashboard-card">
+                    <strong>Matched Businesses/Volunteers</strong>
+                    <ul>
+                        <li>TechBiz - 10 laptops</li>
+                        <li>LocalVolunteers - Event support</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="account" class="dashboard-section">
+                <div class="dashboard-header">Account Settings</div>
+                <div class="dashboard-card">
+                    <strong>Charity Info</strong><br>
+                    Name: <span id="dashboard-charity-name">[Charity Name]</span><br>
+                    Email: <span id="dashboard-charity-email">[email@charity.org]</span><br>
+                    <button style="margin-top:1em; background:#E1C9E3; color:#1b2432; border:none; border-radius:5px; padding:0.7em 1.5em; font-size:1em; font-weight:bold; cursor:pointer;">Edit Info</button>
+                </div>
+            </div>
+        </div>
+      </div>
+    </main>
+    
+    <script>
+      var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz67diA9ZnP5FDIOU8FChqyzsJWi0yQJqbe4j4ofegmpWANJlRUZhZ-8yndbPaZrbIk/exec';
+      
+      // Simple tab navigation for dashboard
+      function showSection(id) {
+        document.querySelectorAll('.dashboard-section').forEach(function(sec) {
+          sec.classList.remove('active');
+        });
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.sidebar-item').forEach(function(item) {
+          item.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Load data when switching to requests section
+        if (id === 'requests') {
+          loadDonationOffers();
+          loadAcceptedOffers();
+          loadCharityRequests();
+          loadVolunteerApplications();
+        }
+      }
+      
+      function initializeDashboard() {
+        const userEmail = localStorage.getItem('userEmail');
+        const userName = localStorage.getItem('userName');
+        
+        if (userEmail) {
+          document.getElementById('dashboard-charity-name').textContent = userName || 'Charity';
+          document.getElementById('dashboard-charity-email').textContent = userEmail;
+          document.getElementById('charity-name').textContent = userName || 'Charity';
+        }
+      }
+      
+      function loadDonationOffers() {
+        const container = document.getElementById('charity-offers-received');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading offers...</div>';
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getOffers');
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            displayOffers(data.data);
+          } else {
+            container.innerHTML = '<div class="no-offers">Error loading offers: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading offers:', err);
+          container.innerHTML = '<div class="no-offers">Error loading offers. Please try again.</div>';
+        });
+      }
+      
+      function displayOffers(offers) {
+        const container = document.getElementById('charity-offers-received');
+        if (!container) return;
+        
+        if (!offers || offers.length === 0) {
+          container.innerHTML = '<div class="no-offers">No donation offers available at the moment.</div>';
+          return;
+        }
+        
+        // Filter out accepted and rejected offers, only show pending offers
+        const pendingOffers = offers.filter(offer => offer.status === 'pending' || !offer.status);
+        
+        if (pendingOffers.length === 0) {
+          container.innerHTML = '<div class="no-offers">No pending offers available at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = pendingOffers.map(offer => `
+          <div class="offer-tile" style="margin-bottom: 1em;">
+            <h3>${offer.item}</h3>
+            <div class="business-name">Offered by: ${offer['business-name']}</div>
+            <div class="item-details">
+              <div class="quantity">Quantity: ${offer.quantity}</div>
+              <div>${offer.details || 'No additional details provided.'}</div>
+            </div>
+            <div class="date">Posted: ${new Date(offer.date).toLocaleDateString()}</div>
+            <div style="display: flex; gap: 1em; margin-top: 1em;">
+              <button class="accept-btn" onclick="acceptOffer('${offer.id}', '${offer.item}', '${offer['business-name']}')" style="flex: 1;">
+                Accept Offer
+              </button>
+              <button class="reject-btn" onclick="rejectOffer('${offer.id}', '${offer.item}', '${offer['business-name']}')" style="flex: 1; background: #f44336; color: white; border: none; border-radius: 5px; padding: 0.7em 1.5em; font-weight: bold; cursor: pointer;">
+                Reject Offer
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+      
+      function acceptOffer(offerId, itemName, businessName) {
+        if (confirm(`Accept the offer for "${itemName}" from ${businessName}?`)) {
+          const formData = new URLSearchParams();
+          formData.append('action', 'updateStatus');
+          formData.append('type', 'offer');
+          formData.append('id', offerId);
+          formData.append('status', 'accepted');
+          
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Offer accepted successfully!');
+              loadDonationOffers(); // Reload offers
+              loadAcceptedOffers(); // Reload accepted offers
+            } else {
+              alert('Error accepting offer: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Error accepting offer:', err);
+            alert('Error accepting offer. Please try again.');
+          });
+        }
+      }
+      
+      function rejectOffer(offerId, itemName, businessName) {
+        if (confirm(`Reject the offer for "${itemName}" from ${businessName}?`)) {
+          const formData = new URLSearchParams();
+          formData.append('action', 'updateStatus');
+          formData.append('type', 'offer');
+          formData.append('id', offerId);
+          formData.append('status', 'rejected');
+          
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Offer rejected successfully!');
+              loadDonationOffers(); // Reload offers
+            } else {
+              alert('Error rejecting offer: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Error rejecting offer:', err);
+            alert('Error rejecting offer. Please try again.');
+          });
+        }
+      }
+      
+      function loadAcceptedOffers() {
+        const container = document.getElementById('charity-offers-accepted');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading accepted offers...</div>';
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getAcceptedOffers');
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            displayAcceptedOffers(data.data);
+          } else {
+            container.innerHTML = '<div class="no-offers">Error loading accepted offers: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading accepted offers:', err);
+          container.innerHTML = '<div class="no-offers">Error loading accepted offers. Please try again.</div>';
+        });
+      }
+      
+      function displayAcceptedOffers(offers) {
+        const container = document.getElementById('charity-offers-accepted');
+        if (!container) return;
+        
+        if (!offers || offers.length === 0) {
+          container.innerHTML = '<div class="no-offers">No accepted offers at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = offers.map(offer => `
+          <div class="offer-tile" style="margin-bottom: 1em;">
+            <h3>${offer.item}</h3>
+            <div class="business-name">Offered by: ${offer['business-name']}</div>
+            <div class="item-details">
+              <div class="quantity">Quantity: ${offer.quantity}</div>
+              <div>${offer.details || 'No additional details provided.'}</div>
+            </div>
+            <div class="date">Accepted: ${new Date(offer.date).toLocaleDateString()}</div>
+            <div style="color: #4caf50; font-weight: bold; margin-top: 0.5em;">✓ Accepted</div>
+          </div>
+        `).join('');
+      }
+      
+
+      
+      function loadCharityRequests() {
+        const container = document.getElementById('charity-requests-posted');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading your requests...</div>';
+        
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          container.innerHTML = '<div class="no-offers">Please log in to view your requests.</div>';
+          return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getCharityRequests');
+        formData.append('charity-email', userEmail);
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            displayCharityRequests(data.data);
+          } else {
+            container.innerHTML = '<div class="no-offers">Error loading your requests: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading charity requests:', err);
+          container.innerHTML = '<div class="no-offers">Error loading your requests. Please try again.</div>';
+        });
+      }
+      
+      function displayCharityRequests(requests) {
+        const container = document.getElementById('charity-requests-posted');
+        if (!container) return;
+        
+        if (!requests || requests.length === 0) {
+          container.innerHTML = '<div class="no-offers">You haven\'t posted any donation requests yet.</div>';
+          return;
+        }
+        
+        container.innerHTML = requests.map(request => `
+          <div class="offer-tile" style="margin-bottom: 1em;">
+            <h3>${request.item}</h3>
+            <div class="item-details">
+              <div class="quantity">Quantity needed: ${request.quantity}</div>
+              <div>Category: ${request.category || 'Not specified'}</div>
+              <div>${request.details || 'No additional details provided.'}</div>
+            </div>
+            <div class="date">Posted: ${new Date(request.date).toLocaleDateString()}</div>
+            <div style="color: #6b0504; font-weight: bold; margin-top: 0.5em;">📋 Active Request</div>
+          </div>
+        `).join('');
+      }
+      
+      function loadVolunteerApplications() {
+        const container = document.getElementById('charity-volunteer-applications');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading volunteer applications...</div>';
+        
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          container.innerHTML = '<div class="no-offers">Please log in to view volunteer applications.</div>';
+          return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getVolunteerApplications');
+        formData.append('charity-email', userEmail);
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            displayVolunteerApplications(data.data);
+          } else {
+            container.innerHTML = '<div class="no-offers">Error loading applications: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading volunteer applications:', err);
+          container.innerHTML = '<div class="no-offers">Error loading applications. Please try again.</div>';
+        });
+      }
+      
+      function displayVolunteerApplications(applications) {
+        const container = document.getElementById('charity-volunteer-applications');
+        if (!container) return;
+        
+        if (!applications || applications.length === 0) {
+          container.innerHTML = '<div class="no-offers">No volunteer applications received yet.</div>';
+          return;
+        }
+        
+        // Filter to only show pending applications
+        const pendingApplications = applications.filter(app => app.status === 'pending' || !app.status);
+        
+        if (pendingApplications.length === 0) {
+          container.innerHTML = '<div class="no-offers">No pending volunteer applications at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = pendingApplications.map(app => `
+          <div class="offer-tile" style="margin-bottom: 1em;">
+            <h3>${app.role}</h3>
+            <div class="business-name">Applied by: ${app['volunteer-name']}</div>
+            <div class="item-details">
+              <div class="quantity">Volunteer Email: ${app['volunteer-email']}</div>
+              <div>Application Date: ${new Date(app.date).toLocaleDateString()}</div>
+            </div>
+            <div style="display: flex; gap: 1em; margin-top: 1em;">
+              <button class="accept-btn" onclick="acceptVolunteerApplication('${app.id}', '${app.role}', '${app['volunteer-name']}')" style="flex: 1;">
+                Accept Application
+              </button>
+              <button class="reject-btn" onclick="rejectVolunteerApplication('${app.id}', '${app.role}', '${app['volunteer-name']}')" style="flex: 1; background: #f44336; color: white; border: none; border-radius: 5px; padding: 0.7em 1.5em; font-weight: bold; cursor: pointer;">
+                Reject Application
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+      
+      function acceptVolunteerApplication(applicationId, roleName, volunteerName) {
+        if (confirm(`Accept the volunteer application for "${roleName}" from ${volunteerName}?`)) {
+          const formData = new URLSearchParams();
+          formData.append('action', 'updateVolunteerApplicationStatus');
+          formData.append('id', applicationId);
+          formData.append('status', 'accepted');
+          
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Volunteer application accepted successfully!');
+              loadVolunteerApplications(); // Reload applications
+            } else {
+              alert('Error accepting application: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Error accepting volunteer application:', err);
+            alert('Error accepting application. Please try again.');
+          });
+        }
+      }
+      
+      function rejectVolunteerApplication(applicationId, roleName, volunteerName) {
+        if (confirm(`Reject the volunteer application for "${roleName}" from ${volunteerName}?`)) {
+          const formData = new URLSearchParams();
+          formData.append('action', 'updateVolunteerApplicationStatus');
+          formData.append('id', applicationId);
+          formData.append('status', 'rejected');
+          
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Volunteer application rejected.');
+              loadVolunteerApplications(); // Reload applications
+            } else {
+              alert('Error rejecting application: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Error rejecting volunteer application:', err);
+            alert('Error rejecting application. Please try again.');
+          });
+        }
+      }
+      
+      // Initialize when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        var name = localStorage.getItem('userName') || '[Charity Name]';
+        var email = localStorage.getItem('userEmail') || '[email@charity.org]';
+        var nameSpan = document.getElementById('dashboard-charity-name');
+        var emailSpan = document.getElementById('dashboard-charity-email');
+        if (nameSpan) nameSpan.textContent = name;
+        if (emailSpan) emailSpan.textContent = email;
+        
+        // Initialize dashboard
+        initializeDashboard();
+        
+        // Load initial data
+        loadDonationOffers();
+        loadAcceptedOffers(); // Load accepted offers on page load
+        loadCharityRequests(); // Load charity requests on page load
+        loadVolunteerApplications(); // Load volunteer applications on page load
+        
+        // Handle donation request form submission
+        const requestForm = document.getElementById('charity-request-form');
+        const requestMessage = document.getElementById('charity-request-message');
+        
+        if (requestForm) {
+          requestForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userEmail = localStorage.getItem('userEmail');
+            const userName = localStorage.getItem('userName');
+            
+            // Debug: Log request data
+            console.log('Creating donation request:', {
+              userEmail,
+              userName,
+              item: requestForm['item'].value,
+              category: requestForm['category'].value,
+              quantity: requestForm['quantity'].value,
+              details: requestForm['details'].value
+            });
+            
+            const formData = new URLSearchParams();
+            formData.append('action', 'createRequest');
+            formData.append('charity-email', userEmail);
+            formData.append('charity-name', userName);
+            formData.append('item', requestForm['item'].value);
+            formData.append('category', requestForm['category'].value);
+            formData.append('quantity', requestForm['quantity'].value);
+            formData.append('details', requestForm['details'].value);
+            
+            fetch(APPS_SCRIPT_URL, {
+              method: 'POST',
+              body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+              console.log('Request creation response:', data); // Debug log
+              if (data.success) {
+                requestMessage.style.color = '#4caf50';
+                requestMessage.textContent = 'Donation request created successfully!';
+                requestForm.reset();
+                loadCharityRequests(); // Reload requests after creation
+              } else {
+                requestMessage.style.color = '#f44336';
+                requestMessage.textContent = 'Error creating request: ' + (data.error || 'Unknown error');
+              }
+            })
+            .catch(err => {
+              console.error('Error creating request:', err);
+              requestMessage.style.color = '#f44336';
+              requestMessage.textContent = 'Error creating request. Please try again.';
+            });
+          });
+        }
+        
+        // Handle volunteer request form submission
+        const volunteerForm = document.getElementById('charity-volunteer-form');
+        const volunteerMessage = document.getElementById('charity-volunteer-message');
+        
+        if (volunteerForm) {
+          volunteerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userEmail = localStorage.getItem('userEmail');
+            const userName = localStorage.getItem('userName');
+            
+            // Debug: Log volunteer request data
+            console.log('Creating volunteer request:', {
+              userEmail,
+              userName,
+              role: volunteerForm['role'].value,
+              category: volunteerForm['category'].value,
+              hours: volunteerForm['hours'].value,
+              details: volunteerForm['details'].value
+            });
+            
+            const formData = new URLSearchParams();
+            formData.append('action', 'createVolunteerRequest');
+            formData.append('charity-email', userEmail);
+            formData.append('charity-name', userName);
+            formData.append('role', volunteerForm['role'].value);
+            formData.append('category', volunteerForm['category'].value);
+            formData.append('hours', volunteerForm['hours'].value);
+            formData.append('details', volunteerForm['details'].value);
+            
+            fetch(APPS_SCRIPT_URL, {
+              method: 'POST',
+              body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+              console.log('Volunteer request creation response:', data); // Debug log
+              if (data.success) {
+                volunteerMessage.style.color = '#4caf50';
+                volunteerMessage.textContent = 'Volunteer request created successfully!';
+                volunteerForm.reset();
+                // Volunteer requests are displayed on the individual dashboard, not here
+              } else {
+                volunteerMessage.style.color = '#f44336';
+                volunteerMessage.textContent = 'Error creating volunteer request: ' + (data.error || 'Unknown error');
+              }
+            })
+            .catch(err => {
+              console.error('Error creating volunteer request:', err);
+              volunteerMessage.style.color = '#f44336';
+              volunteerMessage.textContent = 'Error creating volunteer request. Please try again.';
+            });
+          });
+        }
+      });
+    </script>
+  </body>
+</html> 

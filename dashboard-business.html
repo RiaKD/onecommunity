@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Business Dashboard | OneCommunity</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .dashboard-container {
+        display: flex;
+        max-width: 1200px;
+        margin: 2em auto;
+        background: #f7f3f9;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .dashboard-sidebar {
+        width: 250px;
+        background: #6b0504;
+        color: #eddfef;
+        padding: 2em 0;
+      }
+      .dashboard-sidebar h2 {
+        text-align: center;
+        margin-bottom: 2em;
+        padding: 0 1em;
+      }
+      .dashboard-sidebar a {
+        display: block;
+        padding: 1em 2em;
+        color: #eddfef;
+        text-decoration: none;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+      .dashboard-sidebar a:hover,
+      .dashboard-sidebar a.active {
+        background: rgba(255,255,255,0.1);
+        border-left-color: #eddfef;
+      }
+      .dashboard-main {
+        flex: 1;
+        padding: 2em;
+      }
+      .dashboard-section {
+        display: none;
+      }
+      .dashboard-section.active {
+        display: block;
+      }
+      .dashboard-header {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #6b0504;
+        margin-bottom: 1.5em;
+      }
+      .dashboard-card {
+        background: white;
+        padding: 1.5em;
+        border-radius: 8px;
+        margin-bottom: 1.5em;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .requests-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5em;
+        margin-top: 1.5em;
+      }
+      .request-tile {
+        background: white;
+        padding: 1.5em;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 4px solid #6b0504;
+      }
+      .request-tile h3 {
+        color: #6b0504;
+        margin-bottom: 0.5em;
+      }
+      .charity-name {
+        color: #666;
+        font-style: italic;
+        margin-bottom: 1em;
+      }
+      .item-details {
+        margin-bottom: 1em;
+      }
+      .quantity {
+        font-weight: bold;
+        color: #6b0504;
+        margin-bottom: 0.5em;
+      }
+      .date {
+        color: #999;
+        font-size: 0.9em;
+        margin-bottom: 1em;
+      }
+      .offer-btn {
+        background: #6b0504;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.7em 1.5em;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+      }
+      .offer-btn:hover {
+        background: #5a0403;
+      }
+      .loading {
+        text-align: center;
+        padding: 2em;
+        color: #666;
+        font-style: italic;
+      }
+      .no-requests {
+        text-align: center;
+        padding: 2em;
+        color: #666;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div style="font-size:1.5em;font-weight:bold;letter-spacing:1px;">OneCommunity</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="why.html">About Us</a></li>
+        <li><a href="businesses.html">For Businesses</a></li>
+        <li><a href="charities.html">For Charities</a></li>
+        <li><a href="individuals.html">Volunteering</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+      <a href="login.html" class="cta-login" style="text-decoration:none;">Log In / Register</a>
+    </nav>
+    <main>
+
+
+      <div class="dashboard-container">
+        <nav class="dashboard-sidebar">
+          <h2>Business Dashboard</h2>
+          <a href="#" id="link-overview" onclick="showSection('overview');return false;">Overview</a>
+          <a href="#" id="link-offer-donation" onclick="showSection('offer-donation');return false;">Offer a Donation</a>
+          <a href="#" id="link-donations" onclick="showSection('donations');return false;">Donations & Volunteering</a>
+
+          <a href="#" id="link-settings" onclick="showSection('settings');return false;">Account Settings</a>
+        </nav>
+        <section class="dashboard-main">
+          <div id="overview" class="dashboard-section active">
+            <div class="dashboard-header">Welcome, <span id="business-name">Business</span>!</div>
+            <div class="dashboard-card">
+              <strong>Quick Stats</strong><br>
+              Donations made: <b>12</b><br>
+              Volunteer hours: <b>48</b><br>
+              Matches found: <b>5</b>
+            </div>
+          </div>
+          <div id="offer-donation" class="dashboard-section">
+            <div class="dashboard-header">Offer a Donation</div>
+            <div class="dashboard-card">
+              <strong>Submit a New Donation Offer</strong>
+              <form id="donation-offer-form" style="margin-top: 1em;">
+                <div style="margin-bottom: 1em;">
+                  <label for="offer-item">Item to Offer:</label><br>
+                  <input type="text" id="offer-item" name="item" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 1em;">
+                  <label for="offer-category">Category:</label><br>
+                  <select id="offer-category" name="category" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                    <option value="Food">Food</option>
+                    <option value="Toiletries">Toiletries</option>
+                    <option value="Clothes">Clothes</option>
+                    <option value="Books">Books</option>
+                    <option value="Toys">Toys</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div style="margin-bottom: 1em;">
+                  <label for="offer-quantity">Quantity:</label><br>
+                  <input type="number" id="offer-quantity" name="quantity" min="1" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 1em;">
+                  <label for="offer-details">Details:</label><br>
+                  <textarea id="offer-details" name="details" style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px; height: 80px; resize: vertical;"></textarea>
+                </div>
+                <button type="submit" style="background: #6b0504; color: #eddfef; border: none; border-radius: 5px; padding: 1em 2em; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 1em; width: 100%;">Submit Offer</button>
+              </form>
+              <div id="offer-message" style="margin-top: 1em;"></div>
+            </div>
+          </div>
+          <div id="donations" class="dashboard-section">
+            <div class="dashboard-header">Manage Donations & Volunteering</div>
+            
+            <!-- Your Active Offers Section -->
+            <div class="dashboard-card">
+              <strong>Your Active Offers (Pending)</strong>
+              <div id="active-offers-container">
+                <div class="loading">Loading your active offers...</div>
+              </div>
+            </div>
+            
+            <!-- Accepted Offers Section -->
+            <div class="dashboard-card">
+              <strong>Accepted Offers</strong>
+              <div id="accepted-offers-container">
+                <div class="loading">Loading your accepted offers...</div>
+              </div>
+            </div>
+            
+            <!-- Requests Received Section -->
+            <div class="dashboard-card">
+              <strong>Requests Received</strong>
+              <div id="requests-received-container">
+                <div class="loading">Loading requests received...</div>
+              </div>
+            </div>
+            
+            <!-- Offers Made Section -->
+            <div class="dashboard-card">
+              <strong>Offers Made</strong>
+              <div id="offers-made-container">
+                <div class="loading">Loading your offers...</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="settings" class="dashboard-section">
+            <div class="dashboard-header">Account Settings</div>
+            <div class="dashboard-card">
+              <strong>Business Info</strong><br>
+              Name: <span id="dashboard-business-name">[Business Name]</span><br>
+              Email: <span id="dashboard-business-email">[email@business.com]</span><br>
+              <button style="margin-top:1em; background:#E1C9E3; color:#1b2432; border:none; border-radius:5px; padding:0.7em 1.5em; font-size:1em; font-weight:bold; cursor:pointer;">Edit Info</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    
+    <script>
+      var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz67diA9ZnP5FDIOU8FChqyzsJWi0yQJqbe4j4ofegmpWANJlRUZhZ-8yndbPaZrbIk/exec';
+      
+      // Simple tab navigation for dashboard
+      function showSection(id) {
+        document.querySelectorAll('.dashboard-section').forEach(function(sec) {
+          sec.classList.remove('active');
+        });
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.dashboard-sidebar a').forEach(function(link) {
+          link.classList.remove('active');
+        });
+        document.getElementById('link-' + id).classList.add('active');
+        
+        // Reload data when switching to donations section
+        if (id === 'donations') {
+          loadBusinessData();
+        }
+      }
+      
+      window.onload = function() {
+        showSection('overview');
+        initializeDashboard();
+        loadBusinessData();
+      };
+      
+      function initializeDashboard() {
+        const userEmail = localStorage.getItem('userEmail');
+        const userName = localStorage.getItem('userName');
+        
+        if (userEmail) {
+          document.getElementById('dashboard-business-name').textContent = userName || 'Business';
+          document.getElementById('dashboard-business-email').textContent = userEmail;
+          document.getElementById('business-name').textContent = userName || 'Business';
+        }
+      }
+      
+      function loadBusinessData() {
+        loadActiveOffers();
+        loadAcceptedOffers();
+        loadRequestsReceived();
+        loadOffersMade();
+      }
+      
+      function loadActiveOffers() {
+        const container = document.getElementById('active-offers-container');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading your active offers...</div>';
+        
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          container.innerHTML = '<div class="no-requests">Please log in to view your offers.</div>';
+          return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getBusinessOffers');
+        formData.append('business-email', userEmail);
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Filter to only show pending offers
+            const pendingOffers = data.data.filter(offer => offer.status === 'pending');
+            displayActiveOffers(pendingOffers);
+          } else {
+            container.innerHTML = '<div class="no-requests">Error loading offers: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading active offers:', err);
+          container.innerHTML = '<div class="no-requests">Error loading offers. Please try again.</div>';
+        });
+      }
+      
+      function displayActiveOffers(offers) {
+        const container = document.getElementById('active-offers-container');
+        
+        if (!offers || offers.length === 0) {
+          container.innerHTML = '<div class="no-requests">No pending offers at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = offers.map(offer => `
+          <div class="request-tile" style="margin-bottom: 1em;">
+            <h3>${offer.item}</h3>
+            <div class="item-details">
+              <div class="quantity">Quantity: ${offer.quantity}</div>
+              <div>${offer.details || 'No additional details provided.'}</div>
+            </div>
+            <div class="date">Posted: ${new Date(offer.date).toLocaleDateString()}</div>
+            <div style="margin-top: 1em;">
+              <span style="background: #ff9800; color: white; padding: 0.3em 0.8em; border-radius: 3px; font-size: 0.9em;">
+                Pending
+              </span>
+            </div>
+          </div>
+        `).join('');
+      }
+      
+      function loadAcceptedOffers() {
+        const container = document.getElementById('accepted-offers-container');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading your accepted offers...</div>';
+        
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          container.innerHTML = '<div class="no-requests">Please log in to view your offers.</div>';
+          return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getBusinessOffers');
+        formData.append('business-email', userEmail);
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Filter to only show accepted offers
+            const acceptedOffers = data.data.filter(offer => offer.status === 'accepted');
+            displayAcceptedOffers(acceptedOffers);
+          } else {
+            container.innerHTML = '<div class="no-requests">Error loading offers: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading accepted offers:', err);
+          container.innerHTML = '<div class="no-requests">Error loading offers. Please try again.</div>';
+        });
+      }
+      
+      function displayAcceptedOffers(offers) {
+        const container = document.getElementById('accepted-offers-container');
+        
+        if (!offers || offers.length === 0) {
+          container.innerHTML = '<div class="no-requests">No accepted offers at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = offers.map(offer => `
+          <div class="request-tile" style="margin-bottom: 1em;">
+            <h3>${offer.item}</h3>
+            <div class="item-details">
+              <div class="quantity">Quantity: ${offer.quantity}</div>
+              <div>${offer.details || 'No additional details provided.'}</div>
+            </div>
+            <div class="date">Posted: ${new Date(offer.date).toLocaleDateString()}</div>
+            <div style="margin-top: 1em;">
+              <span style="background: #4caf50; color: white; padding: 0.3em 0.8em; border-radius: 3px; font-size: 0.9em;">
+                Accepted
+              </span>
+            </div>
+          </div>
+        `).join('');
+      }
+      
+      function loadRequestsReceived() {
+        const container = document.getElementById('requests-received-container');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading requests received...</div>';
+        
+        // For now, show all donation requests (in a real system, you'd filter by business preferences)
+        const formData = new URLSearchParams();
+        formData.append('action', 'getRequests');
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            displayRequestsReceived(data.data);
+          } else {
+            container.innerHTML = '<div class="no-requests">Error loading requests: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading requests received:', err);
+          container.innerHTML = '<div class="no-requests">Error loading requests. Please try again.</div>';
+        });
+      }
+      
+      function displayRequestsReceived(requests) {
+        const container = document.getElementById('requests-received-container');
+        
+        if (!requests || requests.length === 0) {
+          container.innerHTML = '<div class="no-requests">No donation requests available at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = requests.map(request => `
+          <div class="request-tile" style="margin-bottom: 1em;">
+            <h3>${request.item}</h3>
+            <div class="charity-name">Requested by: ${request['charity-name']}</div>
+            <div class="item-details">
+              <div class="quantity">Quantity: ${request.quantity}</div>
+              <div>${request.details || 'No additional details provided.'}</div>
+            </div>
+            <div class="date">Posted: ${new Date(request.date).toLocaleDateString()}</div>
+            <button class="offer-btn" onclick="createOffer('${request.id}', '${request.item}', '${request['charity-name']}')" style="margin-top: 1em;">
+              Make Offer
+            </button>
+          </div>
+        `).join('');
+      }
+      
+      function loadOffersMade() {
+        const container = document.getElementById('offers-made-container');
+        if (!container) return;
+        
+        container.innerHTML = '<div class="loading">Loading your offers...</div>';
+        
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          container.innerHTML = '<div class="no-requests">Please log in to view your offers.</div>';
+          return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getBusinessOffers');
+        formData.append('business-email', userEmail);
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Filter out rejected offers - only show pending and accepted
+            const filteredOffers = data.data.filter(offer => offer.status !== 'rejected');
+            displayOffersMade(filteredOffers);
+          } else {
+            container.innerHTML = '<div class="no-requests">Error loading offers: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading offers made:', err);
+          container.innerHTML = '<div class="no-requests">Error loading offers. Please try again.</div>';
+        });
+      }
+      
+      function displayOffersMade(offers) {
+        const container = document.getElementById('offers-made-container');
+        
+        if (!offers || offers.length === 0) {
+          container.innerHTML = '<div class="no-requests">No offers made yet.</div>';
+          return;
+        }
+        
+        container.innerHTML = offers.map(offer => `
+          <div class="request-tile" style="margin-bottom: 1em;">
+            <h3>${offer.item}</h3>
+            <div class="item-details">
+              <div class="quantity">Quantity: ${offer.quantity}</div>
+              <div>${offer.details || 'No additional details provided.'}</div>
+            </div>
+            <div class="date">Posted: ${new Date(offer.date).toLocaleDateString()}</div>
+            <div style="margin-top: 1em;">
+              <span style="background: ${offer.status === 'pending' ? '#ff9800' : offer.status === 'accepted' ? '#4caf50' : '#f44336'}; color: white; padding: 0.3em 0.8em; border-radius: 3px; font-size: 0.9em;">
+                ${offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
+              </span>
+            </div>
+          </div>
+        `).join('');
+      }
+      
+
+      
+      function createOffer(requestId, itemName, charityName) {
+        // Create a form for offer details instead of using prompt
+        const offerForm = document.createElement('div');
+        offerForm.innerHTML = `
+          <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 2em; border-radius: 10px; max-width: 500px; width: 90%;">
+              <h3 style="color: #6b0504; margin-bottom: 1em;">Create Offer for "${itemName}"</h3>
+              <p style="margin-bottom: 1em; color: #666;">Requested by: ${charityName}</p>
+              <form id="offer-form">
+                <div style="margin-bottom: 1em;">
+                  <label for="offer-quantity">Quantity to Offer:</label><br>
+                  <input type="number" id="offer-quantity" name="quantity" value="1" min="1" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+                <div style="margin-bottom: 1em;">
+                  <label for="offer-details">Offer Details:</label><br>
+                  <textarea id="offer-details" name="details" rows="4" required style="width: 100%; padding: 0.5em; border: 1px solid #ccc; border-radius: 5px; resize: vertical;" placeholder="Describe your offer, conditions, delivery method, etc."></textarea>
+                </div>
+                <div style="display: flex; gap: 1em; margin-top: 1.5em;">
+                  <button type="submit" style="background: #6b0504; color: white; border: none; border-radius: 5px; padding: 0.7em 1.5em; font-weight: bold; cursor: pointer; flex: 1;">Submit Offer</button>
+                  <button type="button" onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: #ccc; color: #333; border: none; border-radius: 5px; padding: 0.7em 1.5em; font-weight: bold; cursor: pointer; flex: 1;">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(offerForm);
+        
+        // Handle form submission
+        const form = offerForm.querySelector('#offer-form');
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const userEmail = localStorage.getItem('userEmail');
+          const userName = localStorage.getItem('userName');
+          
+          // Debug: Log offer data
+          console.log('Creating offer:', {
+            requestId,
+            itemName,
+            charityName,
+            userEmail,
+            userName,
+            quantity: form['quantity'].value,
+            details: form['details'].value
+          });
+          
+          const formData = new URLSearchParams();
+          formData.append('action', 'createOffer');
+          formData.append('business-email', userEmail);
+          formData.append('business-name', userName);
+          formData.append('item', itemName);
+          formData.append('quantity', form['quantity'].value);
+          formData.append('details', form['details'].value);
+          
+          // Debug: Log the form data being sent
+          console.log('Form data being sent:', formData.toString());
+          console.log('APPS_SCRIPT_URL:', APPS_SCRIPT_URL);
+          
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => {
+            console.log('Response status:', res.status);
+            console.log('Response headers:', res.headers);
+            return res.json();
+          })
+          .then(data => {
+            console.log('Offer creation response:', data); // Debug log
+            if (data.success) {
+              alert('Offer created successfully!');
+              offerForm.remove();
+              loadBusinessData(); // Reload business data
+            } else {
+              alert('Error creating offer: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Error creating offer:', err);
+            alert('Error creating offer. Please try again.');
+          });
+        });
+      }
+    </script>
+  </body>
+</html> 

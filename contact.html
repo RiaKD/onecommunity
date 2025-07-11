@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Contact Us | OneCommunity</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .contact-section {
+        max-width: 600px;
+        margin: 2em auto;
+        background: #f7f3f9;
+        border-radius: 10px;
+        padding: 2.5em 2em;
+      }
+      .contact-section h1, .contact-section h2 {
+        color: #6b0504;
+        text-align: center;
+      }
+      .contact-section p {
+        font-size: 1.1em;
+        color: #1b2432;
+        text-align: center;
+      }
+      .contact-details {
+        margin: 2em 0 2.5em 0;
+        text-align: center;
+      }
+      .contact-details a {
+        color: #6b0504;
+        text-decoration: underline;
+        margin: 0 0.5em;
+      }
+      .contact-form label {
+        display: block;
+        margin-top: 1em;
+        font-weight: bold;
+      }
+      .contact-form input, .contact-form textarea {
+        width: 100%;
+        padding: 0.5em;
+        margin-top: 0.5em;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
+      .contact-form button {
+        background: #6b0504;
+        color: #eddfef;
+        border: none;
+        padding: 1em 2em;
+        margin-top: 1.5em;
+        font-size: 1.1em;
+        border-radius: 5px;
+        cursor: pointer;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .social-links {
+        margin-top: 1.5em;
+        text-align: center;
+      }
+      .social-links a {
+        display: inline-block;
+        margin: 0 0.5em;
+        color: #1b2432;
+        font-size: 1.3em;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div style="font-size:1.5em;font-weight:bold;letter-spacing:1px;">OneCommunity</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="why.html">About Us</a></li>
+        <li><a href="businesses.html">For Businesses</a></li>
+        <li><a href="charities.html">For Charities</a></li>
+        <li><a href="individuals.html">Volunteering</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+      <a href="login.html" class="cta-login" style="text-decoration:none;">Log In / Register</a>
+    </nav>
+    <main>
+      <section class="contact-section">
+        <h1>Contact Us</h1>
+        <p>We'd love to hear from you! Use the form below or reach out directly.</p>
+        <div class="contact-details">
+          <p><strong>Email:</strong> <a href="mailto:info@onecommunity.org">info@onecommunity.org</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+441234567890">+44 1234 567890</a></p>
+          <p><strong>Address:</strong><br>OneCommunity HQ<br>123 Community Lane<br>London, UK N1 2AB</p>
+        </div>
+        <form class="contact-form">
+          <h2>Send a Message</h2>
+          <label for="name">Your Name:</label>
+          <input type="text" id="name" name="name" required>
+          <label for="email">Your Email:</label>
+          <input type="email" id="email" name="email" required>
+          <label for="message">Message:</label>
+          <textarea id="message" name="message" rows="4" required></textarea>
+          <button type="submit">Send Message</button>
+        </form>
+        <div class="social-links">
+          <a href="#" title="Facebook"><span aria-hidden="true">&#x1F426;</span> Facebook</a>
+          <a href="#" title="Twitter"><span aria-hidden="true">&#x1F426;</span> Twitter</a>
+          <a href="#" title="Instagram"><span aria-hidden="true">&#x1F33A;</span> Instagram</a>
+          <a href="#" title="LinkedIn"><span aria-hidden="true">&#x1F4BB;</span> LinkedIn</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

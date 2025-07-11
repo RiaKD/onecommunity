@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Log In / Register | OneCommunity</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .auth-section {
+        max-width: 400px;
+        margin: 2.5em auto;
+        background: #f7f3f9;
+        border-radius: 10px;
+        padding: 2.5em 2em;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      }
+      .auth-tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2em;
+      }
+      .auth-tab {
+        background: #E1C9E3;
+        color: #1b2432;
+        border: none;
+        border-radius: 5px 5px 0 0;
+        padding: 0.7em 2em;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        margin: 0 0.2em;
+      }
+      .auth-tab.active {
+        background: #6b0504;
+        color: #eddfef;
+      }
+      .auth-form label {
+        display: block;
+        margin-top: 1em;
+        font-weight: bold;
+      }
+      .auth-form input[type="text"], .auth-form input[type="email"], .auth-form input[type="password"] {
+        width: 100%;
+        padding: 0.5em;
+        margin-top: 0.5em;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
+      .auth-form .remember-me {
+        margin-top: 1em;
+        display: flex;
+        align-items: center;
+      }
+      .auth-form .remember-me input {
+        margin-right: 0.5em;
+      }
+      .auth-form .forgot {
+        float: right;
+        font-size: 0.95em;
+        margin-top: 0.5em;
+      }
+      .auth-form button {
+        background: #6b0504;
+        color: #eddfef;
+        border: none;
+        border-radius: 5px;
+        padding: 1em 2em;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 1.5em;
+        width: 100%;
+      }
+      .register-links {
+        margin-top: 2em;
+        text-align: center;
+      }
+      .register-links button {
+        background: #E1C9E3;
+        color: #1b2432;
+        border: none;
+        border-radius: 5px;
+        padding: 0.7em 1.5em;
+        font-size: 1em;
+        font-weight: bold;
+        margin: 0.5em 0.5em 0 0.5em;
+        cursor: pointer;
+      }
+    </style>
+    <script>
+      function showTab(tab) {
+        document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+        document.getElementById('register-section').style.display = tab === 'register' ? 'block' : 'none';
+        document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+        document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      }
+      window.onload = function() { showTab('login'); };
+
+      const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPodoOfEhpOZSrgOoN2dco16oikjmAR8c_VskoNDFm-8qwM-ODjJwzCobEGtWHVxGt/exec';
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const loginForm = document.getElementById('login-form');
+        const mainSection = document.querySelector('.auth-section');
+        let msg = document.createElement('div');
+        msg.id = 'login-message';
+        msg.style.marginTop = '1em';
+        msg.style.textAlign = 'center';
+        mainSection.appendChild(msg);
+
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          msg.textContent = '';
+          const email = loginForm.email.value.trim();
+          const password = loginForm.password.value;
+          const role = document.getElementById('login-role').value;
+
+          const formData = new URLSearchParams();
+          formData.append('action', 'login');
+          formData.append('role', role);
+          formData.append('email', email);
+          formData.append('password', password);
+
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              localStorage.setItem('userEmail', data.user.email);
+              localStorage.setItem('userRole', role);
+              localStorage.setItem('userName', data.user.name);
+              // Redirect based on role
+              if (role === 'business') {
+                window.location.href = 'dashboard-business.html';
+              } else if (role === 'charity') {
+                window.location.href = 'dashboard-charity.html';
+              } else {
+                window.location.href = 'dashboard-individual.html';
+              }
+            } else {
+              msg.style.color = '#b71c1c';
+              msg.textContent = data.error || 'Invalid login. Please try again.';
+            }
+          })
+          .catch(err => {
+            console.error('Login error:', err);
+            msg.style.color = '#b71c1c';
+            msg.textContent = 'Network error. Please try again.';
+          });
+        });
+      });
+
+      // --- REAL BACKEND INTEGRATION (Google Apps Script Example) ---
+      // Replace the FAKE LOGIN block above with something like:
+      // fetch('YOUR_APPS_SCRIPT_ENDPOINT', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ email, password })
+      // })
+      // .then(res => res.json())
+      // .then(data => {
+      //   if (data.success) { /* redirect to dashboard */ }
+      //   else { /* show error */ }
+      // });
+      // -----------------------------------------------------------
+    </script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div style="font-size:1.5em;font-weight:bold;letter-spacing:1px;">OneCommunity</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="why.html">About Us</a></li>
+        <li><a href="businesses.html">For Businesses</a></li>
+        <li><a href="charities.html">For Charities</a></li>
+        <li><a href="individuals.html">Volunteering</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+      <a href="login.html" class="cta-login" style="text-decoration:none;">Log In / Register</a>
+    </nav>
+    <main>
+      <section class="auth-section">
+        <div class="auth-tabs">
+          <button id="tab-login" class="auth-tab active" onclick="showTab('login')">Log In</button>
+          <button id="tab-register" class="auth-tab" onclick="showTab('register')">Register</button>
+        </div>
+        <form id="login-form" class="auth-form" style="display:block;">
+          <label for="email">Email or Username:</label>
+          <input type="text" id="email" name="email" required>
+          <label for="login-role">Login as:</label>
+          <select id="login-role" name="login-role" required>
+            <option value="individual">Individual</option>
+            <option value="business">Business</option>
+            <option value="charity">Charity</option>
+          </select>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+          <div class="remember-me">
+            <input type="checkbox" id="remember" name="remember">
+            <label for="remember" style="font-weight:normal;">Remember Me</label>
+            <a href="#" class="forgot">Forgot Password?</a>
+          </div>
+          <button type="submit">Log In</button>
+        </form>
+        <div id="register-section" style="display:none;">
+          <div class="register-links">
+            <p>Register as:</p>
+            <button onclick="window.location.href='register-business.html'">Business</button>
+            <button onclick="window.location.href='register-charity.html'">Charity</button>
+            <button onclick="window.location.href='register-individual.html'">Volunteer</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html> 

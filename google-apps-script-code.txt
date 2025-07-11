@@ -1,0 +1,383 @@
+// Google Apps Script for OneCommunity
+// Deploy as web app and use the URL
+
+function doPost(e) {
+  try {
+    const action = e.parameter.action;
+    
+    switch(action) {
+      case 'register':
+        return registerUser(e);
+      case 'login':
+        return loginUser(e);
+      case 'createRequest':
+        return createDonationRequest(e);
+      case 'createOffer':
+        return createDonationOffer(e);
+      case 'getRequests':
+        return getDonationRequests(e);
+      case 'getOffers':
+        return getDonationOffers(e);
+      case 'updateStatus':
+        return updateRequestOfferStatus(e);
+      case 'getCharityRequests':
+        return getCharityRequests(e);
+      case 'getCharityOffers':
+        return getCharityOffers(e);
+      default:
+        return ContentService.createTextOutput(JSON.stringify({
+          success: false,
+          error: 'Invalid action'
+        })).setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function registerUser(e) {
+  const userType = e.parameter['role'];
+  const email = e.parameter.email;
+  const password = e.parameter.password;
+  const name = e.parameter.name;
+  
+  // Get the appropriate sheet based on user type
+  let sheet;
+  switch(userType) {
+    case 'business':
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Businesses');
+      break;
+    case 'charity':
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Charities');
+      break;
+    case 'individual':
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Individuals');
+      break;
+    default:
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'Invalid role'
+      })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // Check if user already exists
+  const data = sheet.getDataRange().getValues();
+  const emailColumn = data[0].indexOf('Email');
+  const existingUser = data.slice(1).find(row => row[emailColumn] === email);
+  
+  if (existingUser) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: 'User already exists'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // Add new user
+  const newRow = [];
+  for (let i = 0; i < data[0].length; i++) {
+    if (data[0][i] === 'Email') {
+      newRow[i] = email;
+    } else if (data[0][i] === 'Password') {
+      newRow[i] = password;
+    } else if (data[0][i] === 'Name') {
+      newRow[i] = name;
+    } else {
+      newRow[i] = '';
+    }
+  }
+  
+  sheet.appendRow(newRow);
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Registration successful'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function loginUser(e) {
+  const userType = e.parameter['role'];
+  const email = e.parameter.email;
+  const password = e.parameter.password;
+  
+  // Get the appropriate sheet based on user type
+  let sheet;
+  switch(userType) {
+    case 'business':
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Businesses');
+      break;
+    case 'charity':
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Charities');
+      break;
+    case 'individual':
+      sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Individuals');
+      break;
+    default:
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'Invalid role'
+      })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // Check credentials
+  const data = sheet.getDataRange().getValues();
+  const emailColumn = data[0].indexOf('Email');
+  const passwordColumn = data[0].indexOf('Password');
+  const nameColumn = data[0].indexOf('Name');
+  
+  const user = data.slice(1).find(row => 
+    row[emailColumn] === email && row[passwordColumn] === password
+  );
+  
+  if (user) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      user: {
+        name: user[nameColumn] || '',
+        email: user[emailColumn] || ''
+      }
+    })).setMimeType(ContentService.MimeType.JSON);
+  } else {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: 'Invalid credentials'
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function createDonationRequest(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationRequests');
+  const data = sheet.getDataRange().getValues();
+  
+  const newRow = [];
+  for (let i = 0; i < data[0].length; i++) {
+    const header = data[0][i];
+    switch(header) {
+      case 'ID':
+        newRow[i] = Utilities.getUuid();
+        break;
+      case 'Item':
+        newRow[i] = e.parameter.item;
+        break;
+      case 'Quantity':
+        newRow[i] = e.parameter.quantity;
+        break;
+      case 'Details':
+        newRow[i] = e.parameter.details;
+        break;
+      case 'Requester Email':
+        newRow[i] = e.parameter['requester-email'];
+        break;
+      case 'Requester Name':
+        newRow[i] = e.parameter['requester-name'];
+        break;
+      case 'Date':
+        newRow[i] = new Date().toISOString();
+        break;
+      case 'Status':
+        newRow[i] = 'pending';
+        break;
+      default:
+        newRow[i] = '';
+    }
+  }
+  
+  sheet.appendRow(newRow);
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Request created successfully'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function createDonationOffer(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationOffers');
+  const data = sheet.getDataRange().getValues();
+  
+  const newRow = [];
+  for (let i = 0; i < data[0].length; i++) {
+    const header = data[0][i];
+    switch(header) {
+      case 'ID':
+        newRow[i] = Utilities.getUuid();
+        break;
+      case 'Item':
+        newRow[i] = e.parameter.item;
+        break;
+      case 'Quantity':
+        newRow[i] = e.parameter.quantity;
+        break;
+      case 'Details':
+        newRow[i] = e.parameter.details;
+        break;
+      case 'Business Name':
+        newRow[i] = e.parameter['business-name'];
+        break;
+      case 'Business Email':
+        newRow[i] = e.parameter['business-email'];
+        break;
+      case 'Date':
+        newRow[i] = new Date().toISOString();
+        break;
+      case 'Status':
+        newRow[i] = 'pending';
+        break;
+      default:
+        newRow[i] = '';
+    }
+  }
+  
+  sheet.appendRow(newRow);
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Offer created successfully'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getDonationRequests(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationRequests');
+  const data = sheet.getDataRange().getValues();
+  
+  if (data.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      data: []
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  const headers = data[0];
+  const requests = data.slice(1).map(row => {
+    const request = {};
+    headers.forEach((header, index) => {
+      request[header] = row[index];
+    });
+    return request;
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    data: requests
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getDonationOffers(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationOffers');
+  const data = sheet.getDataRange().getValues();
+  
+  if (data.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      data: []
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  const headers = data[0];
+  const offers = data.slice(1).map(row => {
+    const offer = {};
+    headers.forEach((header, index) => {
+      offer[header] = row[index];
+    });
+    return offer;
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    data: offers
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function updateRequestOfferStatus(e) {
+  const type = e.parameter.type; // 'request' or 'offer'
+  const id = e.parameter.id;
+  const status = e.parameter.status;
+  
+  let sheet;
+  if (type === 'request') {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationRequests');
+  } else {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationOffers');
+  }
+  
+  const data = sheet.getDataRange().getValues();
+  const idColumn = data[0].indexOf('ID');
+  const statusColumn = data[0].indexOf('Status');
+  
+  // Find the row with the matching ID
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idColumn] === id) {
+      sheet.getRange(i + 1, statusColumn + 1).setValue(status);
+      break;
+    }
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    message: 'Status updated successfully'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getCharityRequests(e) {
+  const charityEmail = e.parameter['charity-email'];
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationRequests');
+  const data = sheet.getDataRange().getValues();
+  
+  if (data.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      data: []
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  const headers = data[0];
+  const requesterEmailColumn = headers.indexOf('Requester Email');
+  
+  // Filter requests by charity email
+  const charityRequests = data.slice(1).filter(row => 
+    row[requesterEmailColumn] === charityEmail
+  ).map(row => {
+    const request = {};
+    headers.forEach((header, index) => {
+      request[header] = row[index];
+    });
+    return request;
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    data: charityRequests
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getCharityOffers(e) {
+  const charityEmail = e.parameter['charity-email'];
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('DonationOffers');
+  const data = sheet.getDataRange().getValues();
+  
+  if (data.length <= 1) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      data: []
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  const headers = data[0];
+  const businessEmailColumn = headers.indexOf('Business Email');
+  
+  // For now, return all offers (in a real system, you'd link offers to specific requests)
+  // This is a simplified version - you might want to add a "Request ID" column to link offers to requests
+  const allOffers = data.slice(1).map(row => {
+    const offer = {};
+    headers.forEach((header, index) => {
+      offer[header] = row[index];
+    });
+    return offer;
+  });
+  
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    data: allOffers
+  })).setMimeType(ContentService.MimeType.JSON);
+} 

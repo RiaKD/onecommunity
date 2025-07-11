@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Register as a Business | OneCommunity</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .register-section {
+        max-width: 500px;
+        margin: 2.5em auto;
+        background: #f7f3f9;
+        border-radius: 10px;
+        padding: 2.5em 2em;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      }
+      .register-section h1 {
+        color: #6b0504;
+        text-align: center;
+        margin-bottom: 1.5em;
+      }
+      .register-form label {
+        display: block;
+        margin-top: 1em;
+        font-weight: bold;
+      }
+      .register-form input, .register-form select {
+        width: 100%;
+        padding: 0.5em;
+        margin-top: 0.5em;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
+      .register-form textarea {
+        width: 100%;
+        padding: 0.5em;
+        margin-top: 0.5em;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        resize: vertical;
+      }
+      .register-form button {
+        background: #6b0504;
+        color: #eddfef;
+        border: none;
+        border-radius: 5px;
+        padding: 1em 2em;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 2em;
+        width: 100%;
+      }
+      .register-form .terms {
+        margin-top: 1em;
+        font-size: 0.98em;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div style="font-size:1.5em;font-weight:bold;letter-spacing:1px;">OneCommunity</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="why.html">About Us</a></li>
+        <li><a href="businesses.html">For Businesses</a></li>
+        <li><a href="charities.html">For Charities</a></li>
+        <li><a href="individuals.html">Volunteering</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+      <a href="login.html" class="cta-login" style="text-decoration:none;">Log In / Register</a>
+    </nav>
+    <main>
+      <section class="register-section">
+        <h1>Register as a Business</h1>
+        <form class="register-form" id="business-register-form">
+          <label for="company-name">Company Name:</label>
+          <input type="text" id="company-name" name="company-name" required>
+          <label for="company-number">Company Registration Number:</label>
+          <input type="text" id="company-number" name="company-number" required>
+          <label for="business-address">Business Address:</label>
+          <input type="text" id="business-address" name="business-address" required>
+          <label for="website">Website URL:</label>
+          <input type="url" id="website" name="website">
+          <label for="industry">Industry/Sector:</label>
+          <input type="text" id="industry" name="industry">
+          <label for="size">Approximate Size (number of employees):</label>
+          <input type="number" id="size" name="size" min="1">
+          <label for="contact-name">Primary Contact Name:</label>
+          <input type="text" id="contact-name" name="contact-name" required>
+          <label for="contact-email">Primary Contact Email:</label>
+          <input type="email" id="contact-email" name="contact-email" required>
+          <label for="contact-phone">Primary Contact Phone:</label>
+          <input type="tel" id="contact-phone" name="contact-phone">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password" required>
+          <label for="confirm-password">Confirm Password:</label>
+          <input type="password" id="confirm-password" name="confirm-password" required>
+          <div class="terms">
+            <input type="checkbox" id="agree" name="agree" required>
+            <label for="agree">I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a> and <a href="privacy.html" target="_blank">Privacy Policy</a>.</label>
+          </div>
+          <button type="submit">Submit for Validation</button>
+        </form>
+        <div style="margin-top:2em; text-align:center; color:#1b2432;">
+          <strong>Thank you for registering!</strong><br>Your application is now under review by our team. We aim to complete validation within 3 business days. You will receive an email once your account is active.
+        </div>
+      </section>
+    </main>
+  </body>
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzPodoOfEhpOZSrgOoN2dco16oikjmAR8c_VskoNDFm-8qwM-ODjJwzCobEGtWHVxGt/exec';
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('business-register-form');
+      const thankYou = document.querySelector('.register-section > div');
+      thankYou.style.display = 'none';
+      const msg = document.createElement('div');
+      msg.style.marginTop = '1em';
+      msg.style.textAlign = 'center';
+      form.parentNode.insertBefore(msg, form.nextSibling);
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        msg.textContent = '';
+        msg.style.color = '#1b2432';
+        // Basic validation
+        const password = form['password'].value;
+        const confirmPassword = form['confirm-password'].value;
+        if (password !== confirmPassword) {
+          msg.style.color = '#b71c1c';
+          msg.textContent = 'Passwords do not match.';
+          return;
+        }
+        // Prepare form data
+        const formData = new URLSearchParams();
+        formData.append('action', 'register');
+        formData.append('role', 'business');
+        formData.append('email', form['contact-email'].value);
+        formData.append('password', password);
+        formData.append('company-name', form['company-name'].value);
+        formData.append('company-number', form['company-number'].value);
+        formData.append('business-address', form['business-address'].value);
+        formData.append('website', form['website'].value);
+        formData.append('industry', form['industry'].value);
+        formData.append('size', form['size'].value);
+        formData.append('contact-name', form['contact-name'].value);
+        formData.append('contact-phone', form['contact-phone'].value);
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(response => {
+          if (response.success) {
+            form.style.display = 'none';
+            msg.style.display = 'none';
+            thankYou.style.display = 'block';
+          } else {
+            msg.style.color = '#b71c1c';
+            msg.textContent = response.error || 'Registration failed. Please try again.';
+          }
+        })
+        .catch(() => {
+          msg.style.color = '#b71c1c';
+          msg.textContent = 'Server error. Please try again later.';
+        });
+      });
+    });
+  </script>
+</html> 

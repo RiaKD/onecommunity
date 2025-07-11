@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Volunteer Dashboard | OneCommunity</title>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js"></script>
+    <style>
+      .dashboard-container { display: flex; min-height: 80vh; background: #f7f3f9; border-radius: 10px; margin: 2em auto; max-width: 1200px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+      .dashboard-sidebar { background: #1b2432; color: #eddfef; min-width: 220px; padding: 2em 1em; border-radius: 10px 0 0 10px; display: flex; flex-direction: column; gap: 1.5em; }
+      .dashboard-sidebar h2 { color: #E1C9E3; font-size: 1.3em; margin-bottom: 1.5em; }
+      .dashboard-sidebar a { color: #eddfef; text-decoration: none; font-size: 1.1em; padding: 0.5em 0.8em; border-radius: 5px; transition: background 0.2s; }
+      .dashboard-sidebar a.active, .dashboard-sidebar a:hover { background: #6b0504; color: #fff; }
+      .dashboard-main { flex: 1; padding: 2.5em 2em; background: #fff; border-radius: 0 10px 10px 0; }
+      .dashboard-section { display: none; }
+      .dashboard-section.active { display: block; }
+      .dashboard-header { font-size: 2em; color: #6b0504; margin-bottom: 1em; }
+      .dashboard-card { background: #E1C9E3; color: #1b2432; border-radius: 8px; padding: 1.5em; margin-bottom: 1.5em; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+      @media (max-width: 900px) { .dashboard-container { flex-direction: column; } .dashboard-sidebar { flex-direction: row; min-width: 0; border-radius: 10px 10px 0 0; padding: 1em 0.5em; gap: 0.5em; } .dashboard-main { border-radius: 0 0 10px 10px; } }
+    </style>
+    <script>
+      function showSection(id) {
+        document.querySelectorAll('.dashboard-section').forEach(function(sec) { sec.classList.remove('active'); });
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.dashboard-sidebar a').forEach(function(link) { link.classList.remove('active'); });
+        document.getElementById('link-' + id).classList.add('active');
+        
+        // Load opportunities when switching to opportunities section
+        if (id === 'opportunities') {
+          loadOpportunities();
+        }
+        // Load accepted offers when switching to matches section
+        if (id === 'matches') {
+          loadAcceptedVolunteerOffers();
+        }
+      }
+      
+      function initializeDashboard() {
+        const userEmail = localStorage.getItem('userEmail');
+        const userName = localStorage.getItem('userName');
+        
+        if (userEmail) {
+          document.getElementById('dashboard-individual-name').textContent = userName || 'Volunteer';
+          document.getElementById('dashboard-individual-email').textContent = userEmail;
+          document.getElementById('individual-name').textContent = userName || 'Volunteer';
+        }
+      }
+      
+
+      
+      function loadOpportunities() {
+        const container = document.getElementById('opportunities-container');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; padding: 2em; color: #666; font-style: italic;">Loading opportunities...</div>';
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getVolunteerRequests');
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            displayOpportunities(data.data);
+          } else {
+            container.innerHTML = '<div style="text-align: center; padding: 2em; color: #f44336;">Error loading opportunities: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading opportunities:', err);
+          container.innerHTML = '<div style="text-align: center; padding: 2em; color: #f44336;">Error loading opportunities. Please try again.</div>';
+        });
+      }
+      
+      function displayOpportunities(requests) {
+        const container = document.getElementById('opportunities-container');
+        
+        if (!requests || requests.length === 0) {
+          container.innerHTML = '<div style="text-align: center; padding: 2em; color: #666; font-style: italic;">No volunteer opportunities available at the moment.</div>';
+          return;
+        }
+        
+        // Filter to only show pending requests
+        const pendingRequests = requests.filter(request => request.status === 'pending' || !request.status);
+        
+        if (pendingRequests.length === 0) {
+          container.innerHTML = '<div style="text-align: center; padding: 2em; color: #666; font-style: italic;">No pending volunteer opportunities available at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = pendingRequests.map(request => 
+          '<div style="background: white; padding: 1.5em; border-radius: 8px; margin-bottom: 1.5em; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #6b0504;">' +
+            '<h3 style="color: #6b0504; margin-bottom: 0.5em;">' + request.role + '</h3>' +
+            '<div style="color: #666; font-style: italic; margin-bottom: 1em;">Requested by: ' + request['charity-name'] + '</div>' +
+            '<div style="margin-bottom: 1em;">' +
+              '<div style="font-weight: bold; color: #6b0504; margin-bottom: 0.5em;">Category: ' + request.category + '</div>' +
+              '<div style="font-weight: bold; color: #6b0504; margin-bottom: 0.5em;">Hours Needed: ' + request.hours + '</div>' +
+              '<div>' + (request.details || 'No additional details provided.') + '</div>' +
+            '</div>' +
+            '<div style="color: #999; font-size: 0.9em; margin-bottom: 1em;">Posted: ' + new Date(request.date).toLocaleDateString() + '</div>' +
+            '<button onclick="applyForVolunteer(\'' + request.id + '\', \'' + request.role + '\', \'' + request['charity-name'] + '\')" style="background: #6b0504; color: white; border: none; border-radius: 5px; padding: 0.7em 1.5em; font-weight: bold; cursor: pointer; width: 100%;">' +
+              'Apply for this Opportunity' +
+            '</button>' +
+          '</div>'
+        ).join('');
+      }
+      
+      function applyForVolunteer(requestId, roleName, charityName) {
+        if (confirm('Apply for the volunteer opportunity "' + roleName + '" at ' + charityName + '?')) {
+          const userEmail = localStorage.getItem('userEmail');
+          const userName = localStorage.getItem('userName');
+          
+          if (!userEmail || !userName) {
+            alert('Please log in to apply for volunteer opportunities.');
+            return;
+          }
+          
+          // Create volunteer application
+          const formData = new URLSearchParams();
+          formData.append('action', 'createVolunteerApplication');
+          formData.append('id', Date.now().toString(36) + Math.random().toString(36).substr(2));
+          formData.append('volunteer-email', userEmail);
+          formData.append('request-id', requestId);
+          formData.append('role', roleName);
+          formData.append('charity-name', charityName);
+          formData.append('date', new Date().toISOString().split('T')[0]);
+          formData.append('status', 'pending');
+          
+          fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Application submitted successfully! The charity will contact you if they\'re interested.');
+              // Reload opportunities to update the UI
+              loadOpportunities();
+            } else {
+              alert('Error submitting application: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(err => {
+            console.error('Error submitting volunteer application:', err);
+            alert('Error submitting application. Please try again.');
+          });
+        }
+      }
+      
+      function loadAcceptedVolunteerOffers() {
+        const container = document.getElementById('accepted-volunteer-offers-container');
+        if (!container) return;
+        
+        container.innerHTML = '<div style="text-align: center; padding: 2em; color: #666; font-style: italic;">Loading your accepted offers...</div>';
+        
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          container.innerHTML = '<div style="text-align: center; padding: 2em; color: #666; font-style: italic;">Please log in to view your accepted offers.</div>';
+          return;
+        }
+        
+        const formData = new URLSearchParams();
+        formData.append('action', 'getVolunteerApplications');
+        formData.append('volunteer-email', userEmail);
+        
+        fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Filter to only show accepted applications for this volunteer
+            const acceptedApplications = data.data.filter(app => 
+              app.status === 'accepted' && app['volunteer-email'] === userEmail
+            );
+            displayAcceptedVolunteerOffers(acceptedApplications);
+          } else {
+            container.innerHTML = '<div style="text-align: center; padding: 2em; color: #f44336;">Error loading offers: ' + (data.error || 'Unknown error') + '</div>';
+          }
+        })
+        .catch(err => {
+          console.error('Error loading accepted volunteer offers:', err);
+          container.innerHTML = '<div style="text-align: center; padding: 2em; color: #f44336;">Error loading offers. Please try again.</div>';
+        });
+      }
+      
+      function displayAcceptedVolunteerOffers(offers) {
+        const container = document.getElementById('accepted-volunteer-offers-container');
+        
+        if (!offers || offers.length === 0) {
+          container.innerHTML = '<div style="text-align: center; padding: 2em; color: #666; font-style: italic;">No accepted volunteering offers at the moment.</div>';
+          return;
+        }
+        
+        container.innerHTML = offers.map(offer => 
+          '<div style="background: white; padding: 1.5em; border-radius: 8px; margin-bottom: 1.5em; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #4caf50;">' +
+            '<h3 style="color: #6b0504; margin-bottom: 0.5em;">' + offer.role + '</h3>' +
+            '<div style="color: #666; font-style: italic; margin-bottom: 1em;">Charity: ' + offer['charity-name'] + '</div>' +
+            '<div style="margin-bottom: 1em;">' +
+              '<div style="font-weight: bold; color: #6b0504; margin-bottom: 0.5em;">Application Date: ' + new Date(offer.date).toLocaleDateString() + '</div>' +
+              '<div style="font-weight: bold; color: #6b0504; margin-bottom: 0.5em;">Status: Accepted</div>' +
+            '</div>' +
+            '<div style="margin-top: 1em;">' +
+              '<span style="background: #4caf50; color: white; padding: 0.3em 0.8em; border-radius: 3px; font-size: 0.9em;">✓ Accepted</span>' +
+            '</div>' +
+          '</div>'
+        ).join('');
+      }
+      
+      window.onload = function() { 
+        showSection('overview'); 
+        initializeDashboard();
+        loadOpportunities();
+      };
+    </script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div style="font-size:1.5em;font-weight:bold;letter-spacing:1px;">OneCommunity</div>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="why.html">About Us</a></li>
+        <li><a href="businesses.html">For Businesses</a></li>
+        <li><a href="charities.html">For Charities</a></li>
+        <li><a href="individuals.html">Volunteering</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+      </ul>
+      <a href="login.html" class="cta-login" style="text-decoration:none;">Log In / Register</a>
+    </nav>
+    <main>
+      <div class="dashboard-container">
+        <nav class="dashboard-sidebar">
+          <h2>Volunteer Dashboard</h2>
+          <a href="#" id="link-overview" onclick="showSection('overview');return false;">Overview</a>
+          <a href="#" id="link-opportunities" onclick="showSection('opportunities');return false;">Opportunities</a>
+          <a href="#" id="link-matches" onclick="showSection('matches');return false;">Matches</a>
+          <a href="#" id="link-settings" onclick="showSection('settings');return false;">Account Settings</a>
+        </nav>
+        <section class="dashboard-main">
+          <div id="overview" class="dashboard-section active">
+            <div class="dashboard-header">Welcome, <span id="individual-name">Volunteer</span>!</div>
+            <div class="dashboard-card">
+              <strong>Quick Stats</strong><br>
+              Opportunities applied: <b>6</b><br>
+              Hours volunteered: <b>22</b><br>
+              Matches found: <b>3</b>
+            </div>
+            <div class="dashboard-card">
+              <strong>Recent Activity</strong>
+              <ul>
+                <li>Volunteered at FoodBank (2 days ago)</li>
+                <li>Matched with GreenCharity for event support</li>
+                <li>Applied for Tech4All digital skills program</li>
+              </ul>
+            </div>
+          </div>
+          <div id="opportunities" class="dashboard-section">
+            <div class="dashboard-header">Volunteering Opportunities</div>
+            <div class="dashboard-card">
+              <strong>Browse & Apply</strong>
+              <div id="opportunities-container">
+                <div style="text-align: center; padding: 2em; color: #666; font-style: italic;">Loading opportunities...</div>
+              </div>
+            </div>
+          </div>
+          <div id="matches" class="dashboard-section">
+            <div class="dashboard-header">Your Accepted Volunteering Offers</div>
+            <div class="dashboard-card">
+              <strong>Accepted Opportunities</strong>
+              <div id="accepted-volunteer-offers-container">
+                <div style="text-align: center; padding: 2em; color: #666; font-style: italic;">Loading your accepted offers...</div>
+              </div>
+            </div>
+          </div>
+          <div id="settings" class="dashboard-section">
+            <div class="dashboard-header">Account Settings</div>
+            <div class="dashboard-card">
+              <strong>Volunteer Info</strong><br>
+              Name: <span id="dashboard-individual-name">[Volunteer Name]</span><br>
+              Email: <span id="dashboard-individual-email">[email@volunteer.com]</span><br>
+              <button style="margin-top:1em; background:#E1C9E3; color:#1b2432; border:none; border-radius:5px; padding:0.7em 1.5em; font-size:1em; font-weight:bold; cursor:pointer;">Edit Info</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+
+</html> 
